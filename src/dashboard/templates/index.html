@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Bot Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <h1 class="text-xl font-bold">Instagram Bot Dashboard</h1>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-green-500 px-3 py-1 rounded-full bg-green-100" id="status">Active</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="text-gray-500 text-sm">Total Interactions Today</h3>
+                <p class="text-2xl font-bold" id="total-interactions">0</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="text-gray-500 text-sm">Success Rate</h3>
+                <p class="text-2xl font-bold" id="success-rate">0%</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="text-gray-500 text-sm">Active Conversations</h3>
+                <p class="text-2xl font-bold" id="active-conversations">0</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="text-gray-500 text-sm">Error Rate</h3>
+                <p class="text-2xl font-bold" id="error-rate">0%</p>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="text-lg font-medium mb-4">Activity Overview</h3>
+                <canvas id="activity-chart"></canvas>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="text-lg font-medium mb-4">Error Distribution</h3>
+                <canvas id="error-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium mb-4">Recent Activity</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="activity-log">
+                            <!-- Activity rows will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Funcția pentru actualizarea datelor
+        function updateDashboard() {
+            fetch('/api/dashboard/stats')
+                .then(response => response.json())
+                .then(data => {
+                    // Actualizează statisticile
+                    document.getElementById('total-interactions').textContent = data.total_interactions;
+                    document.getElementById('success-rate').textContent = data.success_rate + '%';
+                    document.getElementById('active-conversations').textContent = data.active_conversations;
+                    document.getElementById('error-rate').textContent = data.error_rate + '%';
+
+                    // Actualizează graficele
+                    updateActivityChart(data.activity_data);
+                    updateErrorChart(data.error_data);
+
+                    // Actualizează log-ul de activități
+                    updateActivityLog(data.recent_activity);
+                });
+        }
+
+        // Inițializare grafice
+        const activityChart = new Chart(
+            document.getElementById('activity-chart'),
+            {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Interactions',
+                        data: [],
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                }
+            }
+        );
+
+        const errorChart = new Chart(
+            document.getElementById('error-chart'),
+            {
+                type: 'pie',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [
+                            'rgb(255, 99, 132)',
+                            'rgb(255, 159, 64)',
+                            'rgb(255, 205, 86)',
+                            'rgb(75, 192, 192)'
+                        ]
+                    }]
+                }
+            }
+        );
+
+        // Actualizare la fiecare 30 de secunde
+        setInterval(updateDashboard, 30000);
+        updateDashboard();
+    </script>
+</body>
+</html>
